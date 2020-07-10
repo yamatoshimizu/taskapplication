@@ -15,7 +15,7 @@ class ViewController: UIViewController,UITableViewDelegate,UITableViewDataSource
 //    Realmのインスタンスを取得、Taskのオブジェクトが日付順に入った配列taskArrayを作成
     var realm = try! Realm()
     let taskArray = try! Realm().objects(Task.self).sorted(byKeyPath: "date", ascending: true)
-    let searchedTaskArray = try! Realm().objects(Task.self).filter("category == 'searchBar.text'").sorted(byKeyPath: "date", ascending: true)
+    
     
     
     override func viewDidLoad() {
@@ -23,6 +23,7 @@ class ViewController: UIViewController,UITableViewDelegate,UITableViewDataSource
         // Do any additional setup after loading the view.
         tableView.dataSource = self
         tableView.delegate = self
+        searchBar.delegate = self
         searchBar.placeholder = "カテゴリーを入力してください"
     }
 //    InputViewControllerにtaskのデータをタップしたセグエ毎に渡す
@@ -43,6 +44,7 @@ class ViewController: UIViewController,UITableViewDelegate,UITableViewDataSource
     }
 //    列の数をtaskの数に
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+        
         if searchBar.text == ""{
             return taskArray.count
         }else{
@@ -101,10 +103,19 @@ class ViewController: UIViewController,UITableViewDelegate,UITableViewDataSource
             }
         }
     }
+
+//    searchBarのテキストが変更されたときに呼び出される
+    func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String){
+        tableView.reloadData()
+        let searchedTaskArray = try! Realm().objects(Task.self).filter("category == searchBar.text").sorted(byKeyPath: "date", ascending: true)
+        
+    }
 //    viewが読み込まれる直前にデータをリロード
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         tableView.reloadData()
     }
+//
+    
 }
 
