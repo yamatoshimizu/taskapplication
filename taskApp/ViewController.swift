@@ -14,8 +14,7 @@ class ViewController: UIViewController,UITableViewDelegate,UITableViewDataSource
     @IBOutlet weak var searchBar: UISearchBar!
 //    Realmのインスタンスを取得、Taskのオブジェクトが日付順に入った配列taskArrayを作成
     var realm = try! Realm()
-    let taskArray = try! Realm().objects(Task.self).sorted(byKeyPath: "date", ascending: true)
-    
+    var taskArray = try! Realm().objects(Task.self).sorted(byKeyPath: "date", ascending: true)
     
     
     override func viewDidLoad() {
@@ -25,6 +24,7 @@ class ViewController: UIViewController,UITableViewDelegate,UITableViewDataSource
         tableView.delegate = self
         searchBar.delegate = self
         searchBar.placeholder = "カテゴリーを入力してください"
+        print(type(of: taskArray))
     }
 //    InputViewControllerにtaskのデータをタップしたセグエ毎に渡す
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
@@ -44,12 +44,7 @@ class ViewController: UIViewController,UITableViewDelegate,UITableViewDataSource
     }
 //    列の数をtaskの数に
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        
-        if searchBar.text == ""{
             return taskArray.count
-        }else{
-            return searchedTaskArray.count
-        }
     }
 //    セルの内容を決める
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
@@ -57,20 +52,13 @@ class ViewController: UIViewController,UITableViewDelegate,UITableViewDataSource
         let cell = tableView.dequeueReusableCell(withIdentifier: "Cell", for: indexPath)
 //        選択された行のTaskをtaskとして取得
         let task = taskArray[indexPath.row]
-        let searchedTask = searchedTaskArray[indexPath.row]
         let formatter = DateFormatter()
         formatter.dateFormat = "yyyy-MM-dd HH:mm"
         let dateString = formatter.string(from: task.date)
-        let searchedDateString = formatter.string(from: searchedTask.date)
-//        検索窓に文字が入っていなければtaskを表示、入っていればsearchedTaskを表示
-        if searchBar.text == ""{
-            cell.textLabel?.text = task.title
-            cell.detailTextLabel?.text = dateString
-        }else{
-            cell.textLabel?.text = searchedTask.title
-            cell.detailTextLabel?.text = searchedDateString
-        }
-            
+
+        cell.textLabel?.text = task.title
+        cell.detailTextLabel?.text = dateString
+
         return cell
     }
 //    セルが選択されたときに作動
@@ -106,9 +94,14 @@ class ViewController: UIViewController,UITableViewDelegate,UITableViewDataSource
 
 //    searchBarのテキストが変更されたときに呼び出される
     func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String){
+        let predicate = NSPredicate(format: "category == %@",searchBar.text!)
+        if searchBar.text != ""{
+            taskArray = try! Realm().objects(Task.self).filter(predicate).sorted(byKeyPath: "date", ascending: true)
+        }
+        else{
+            taskArray = try! Realm().objects(Task.self).sorted(byKeyPath: "date", ascending: true)
+        }
         tableView.reloadData()
-        let searchedTaskArray = try! Realm().objects(Task.self).filter("category == searchBar.text").sorted(byKeyPath: "date", ascending: true)
-        
     }
 //    viewが読み込まれる直前にデータをリロード
     override func viewWillAppear(_ animated: Bool) {
